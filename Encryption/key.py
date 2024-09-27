@@ -38,7 +38,7 @@ def decrypt_key_with_rsa(private_key_pem, encrypted_key):
 # 密钥派生函数，生成 AES 和 HMAC 密钥
 def derive_keys(shared_secret):
     # 使用 HKDF 从共享密钥中派生 AES 和 HMAC 密钥
-    derived_keys = HKDF(master=shared_secret, key_len=32 + 32, hashmod=SHA256)
+    derived_keys = HKDF(master=shared_secret, key_len=32 + 32, salt=get_random_bytes(16), hashmod=SHA256)
     aes_key = derived_keys[:32]  # AES 256 位密钥
     hmac_key = derived_keys[32:]  # HMAC 256 位密钥
     return aes_key, hmac_key

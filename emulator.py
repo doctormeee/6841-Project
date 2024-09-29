@@ -32,20 +32,31 @@ if __name__ == "__main__":
     sender_aes_key, sender_hmac_key = sender.shared_key_gen()
     
     # Get receiver's public key
-    receiver_public_key = sender.get_public_key("Bob", port)
+    receiver_public_key = sender.get_public_key(receiver_user_id, port)
+
+    plaintext_message = "Just for testing....."
 
     # Encrypt the message
-    encrypted_aes_key, encrypted_hmac_key, encrypted_message, message_hmac = sender.encryption(receiver_public_key, sender_aes_key, sender_hmac_key)
+    encrypted_aes_key, encrypted_hmac_key, encrypted_message, message_hmac = sender.encryption(receiver_public_key, sender_aes_key, sender_hmac_key, plaintext_message)
 
     print("Message HMAC" + message_hmac)
 
     # Send the encrypted message
-    sender.send(sender_user_id, message_id, encrypted_aes_key, encrypted_hmac_key, encrypted_message, message_hmac, port)
-    print("Message sent successfully!")
+    sender.send(sender_user_id, receiver_user_id, message_id, encrypted_aes_key, encrypted_hmac_key, encrypted_message, message_hmac, port)
+    print("Message 1 sent successfully!")
+
+
+    plaintext_message = "See you later!"
+    encrypted_aes_key, encrypted_hmac_key, encrypted_message, message_hmac = sender.encryption(receiver_public_key, sender_aes_key, sender_hmac_key, plaintext_message)
+
+    # Send the encrypted message
+    sender.send(sender_user_id, receiver_user_id, "2", encrypted_aes_key, encrypted_hmac_key, encrypted_message, message_hmac, port)
+    print("Message 2 sent successfully!")
 
     # Receiver retrieves and decrypts the message
-    msg = receiver.receive(message_id, port)
-    print("Message received successfully: ", msg)
+    msg = receiver.receive(receiver_user_id, port)
+    for m in msg:
+        print("Message received successfully!: " + m)
 
 
 

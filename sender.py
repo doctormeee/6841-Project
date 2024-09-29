@@ -15,7 +15,7 @@ def shared_key_gen():
     return aes_key, hmac_key
 
 
-def encryption(receiver_public_key, aes_key, hmac_key):
+def encryption(receiver_public_key, aes_key, hmac_key, plaintext_message):
 
     # 加密AES密钥
     encrypted_aes_key = key.encrypt_key_with_rsa(receiver_public_key, aes_key)
@@ -23,7 +23,7 @@ def encryption(receiver_public_key, aes_key, hmac_key):
     encrypted_hmac_key = key.encrypt_key_with_rsa(receiver_public_key, hmac_key)
 
     # 加密消息
-    plaintext_message = "Hello, this is a secret message!"
+    # plaintext_message = "Just for testing....."
     encrypted_message = ecpt.aes_encrypt(aes_key, plaintext_message)
 
     # 生成 HMAC
@@ -33,10 +33,11 @@ def encryption(receiver_public_key, aes_key, hmac_key):
 
 
 
-def send(user_id, message_id, encrypted_aes_key, encrypted_hmac_key, encrypted_message, message_hmac, port):
+def send(sender_user_id, receiver_user_id, message_id, encrypted_aes_key, encrypted_hmac_key, encrypted_message, message_hmac, port):
     # 构建请求数据
     data_to_send = {
-        'user_id': user_id,
+        'sender_user_id': sender_user_id,
+        'receiver_user_id': receiver_user_id,
         'message_id': message_id,
         'encrypted_aes_key': base64.b64encode(encrypted_aes_key).decode(),
         'encrypted_hmac_key': base64.b64encode(encrypted_hmac_key).decode(),
@@ -48,25 +49,26 @@ def send(user_id, message_id, encrypted_aes_key, encrypted_hmac_key, encrypted_m
     response = requests.post(f"http://127.0.0.1:{port}/send_message", json=data_to_send)
 
 
-def register(user_id, port):
+def register(sender_user_id, port):
     data_to_register = {
-        'user_id': user_id,
+        'sender_user_id': sender_user_id,
         'public_key': base64.b64encode(sender_public_key).decode()
     }
     # 将加密消息发送到本地服务器
     response = requests.post(f"http://127.0.0.1:{port}/register", json=data_to_register)
 
-def get_public_key(user_id, port):
-    response = requests.get(f"http://127.0.0.1:{port}/get_public_key/{user_id}")
+def get_public_key(sender_user_id, port):
+    response = requests.get(f"http://127.0.0.1:{port}/get_public_key/{sender_user_id}")
     
     return base64.b64decode(response.json()['public_key'])
 
 
 def run():
-    user_id = "Alice"
+    sender_user_id = "Alice"
     message_id = "1"
-    register(user_id)
+    receiver_user_id = "Bob"
+    register(sender_user_id)
     aes_key, hmac_key = shared_key_gen()
-    receiver_public_key = get_public_key("Bob")
+    receiver_public_key = get_public_key(receiver_user_id)
     encrypted_aes_key, encrypted_message, message_hmac = encryption(receiver_public_key, aes_key, hmac_key)
-    send(user_id, message_id, encrypted_aes_key, encrypted_message, message_hmac)
+    send(sender_user_id, receiver_user_id, message_id, encrypted_aes_key, encrypted_message, message_hmac)

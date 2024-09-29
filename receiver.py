@@ -8,28 +8,32 @@ receiver_private_key, receiver_public_key = key.generate_rsa_keys()
 
 
 def decryption(message):
+    plaintext_message_list = []
 
-    # 解密AES密钥
-    aes_key = key.decrypt_key_with_rsa(receiver_private_key, base64.b64decode(message['encrypted_aes_key']))
+    for message_id in message:
+        message_content = message[message_id]
 
-    shared_secret = base64.b64encode(b'shared_secret_between_both_parties').decode()
+        # 解密AES密钥
+        aes_key = key.decrypt_key_with_rsa(receiver_private_key, base64.b64decode(message_content['encrypted_aes_key']))
 
-    hmac_key = key.decrypt_key_with_rsa(receiver_private_key, base64.b64decode(message['encrypted_hmac_key']))
 
-    # 解密消息内容
-    plaintext_message = ecpt.aes_decrypt(aes_key, message['encrypted_message'])
+        hmac_key = key.decrypt_key_with_rsa(receiver_private_key, base64.b64decode(message_content['encrypted_hmac_key']))
 
-        # 验证HMAC
-    if ecpt.verify_hmac(hmac_key, plaintext_message, message['message_hmac']):
-        print("Message integrity verified: ", plaintext_message)
-    else:
-        print("Message integrity check failed!")
+        # 解密消息内容
+        plaintext_message = ecpt.aes_decrypt(aes_key, message_content['encrypted_message'])
 
-    return plaintext_message
+            # 验证HMAC
+        if ecpt.verify_hmac(hmac_key, plaintext_message, message_content['message_hmac']):
+            print("Message integrity verified: ", plaintext_message)
+            plaintext_message_list.append(plaintext_message)
+        else:
+            print("Message integrity check failed!")
 
-def receive(message_id, port):
+    return plaintext_message_list
+
+def receive(receiver_user_id, port):
     # 从服务器获取加密的消息
-    response = requests.get(f"http://127.0.0.1:{port}/get_message/{message_id}")
+    response = requests.get(f"http://127.0.0.1:{port}/get_message/{receiver_user_id}")
     message_data = response.json()
     return decryption(message_data)
 
@@ -47,5 +51,6 @@ def run():
     user_id = "Bob"
     message_id = "1"
     register(user_id)
-    msg = receive(message_id)
-    print("Message received successfully!" + msg)
+    msg = receive(user_id)
+    for m in msg:
+        print("Message received successfully!" + m)

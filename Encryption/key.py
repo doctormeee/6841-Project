@@ -9,6 +9,11 @@ from Crypto.Hash import SHA256
 # 导入 get_random_bytes，用于生成加密级别的随机字节流，通常用于生成随机数或密钥。
 from Crypto.Random import get_random_bytes
 
+# Diffie hellman 密钥交换
+from cryptography.hazmat.primitives.asymmetric import dh
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+
 # 生成 RSA 密钥对
 def generate_rsa_keys():
     # key 是一个 RSA 对象，包含公私钥对。
@@ -42,3 +47,33 @@ def derive_keys(shared_secret):
     aes_key = derived_keys[:32]  # AES 256 位密钥
     hmac_key = derived_keys[32:]  # HMAC 256 位密钥
     return aes_key, hmac_key
+
+
+ # 生成 DH 密钥对
+def generate_dh_keys():
+    parameters = dh.generate_parameters(generator=2, key_size=2048, backend=default_backend())
+    private_key = parameters.generate_private_key()
+    public_key = private_key.public_key()
+    return private_key, public_key
+
+ # 生成 DH 共享密钥
+def generate_dh_shared_key(private_key, public_key):
+    shared_key = private_key.exchange(public_key)
+    return shared_key
+
+def derive_dh_aes_hmac_keys(shared_key):
+    hkdf = HKDF(
+        algorithm=hashes.SHA256(),  # 使用 SHA256 哈希函数
+        length=64,  # 生成 32 字节的密钥（32 字节 AES + 32 字节 HMAC）
+        backend=default_backend()
+    )
+    derived_key = hkdf.derive(shared_key)
+    aes_key = derived_key[0:32]
+    hmac_key = derived_key[32:64]
+
+    return aes_key, hmac_key
+
+
+
+
+

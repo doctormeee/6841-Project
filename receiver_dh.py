@@ -1,43 +1,55 @@
-class Sender:
-    def __init__(self, sender_user_id, port):
-        self.sender_private_key, self.sender_public_key = key.generate_dh_keys()
+# local_receive.py
+import requests
+import Encryption.key as key
+import Encryption.ecpt as ecpt
+import base64
+
+class Receiver:
+    def __init__(self, receiver_user_id, port):
+        self.receiver_private_key, self.receiver_public_key = key.generate_dh_keys()
         self.port = port
-        self.sender_user_id = sender_user_id
+        self.receiver_user_id = receiver_user_id
         self.register()
 
     def register(self):
         data_to_register = {
-            'sender_user_id': self.sender_user_id,
-            'public_key': base64.b64encode(self.sender_private_key).decode()
+            'user_id': self.receiver_user_id,
+            'public_key': base64.b64encode(self.receiver_public_key).decode()
         }
         # 将加密消息发送到本地服务器
         response = requests.post(f"http://127.0.0.1:{self.port}/register", json=data_to_register)
 
-    def get_public_key(self, receiver_user_id):
-        response = requests.get(f"http://127.0.0.1:{self.port}/get_public_key/{receiver_user_id}")
+    def get_public_key(self, user_id):
+        response = requests.get(f"http://127.0.0.1:{self.port}/get_public_key/{user_id}")
         
         return base64.b64decode(response.json()['public_key'])
-    
-    def get_msg_id(self):
-        response = requests.post(f"http://127.0.0.1:{self.port}/get_msg_id")
-        return response.json()['message_id']
 
-    def send(self,sender_user_id, receiver_user_id, message_id, plain_message):
-        receiver_public_key = self.get_public_key(receiver_user_id)
-        message_id = self.get_msg_id()
-        dh_shred_key = key.generate_dh_shared_key(self.sender_private_key, receiver_public_key)
-        aes_key, hmac_key = key.derive_dh_aes_hmac_keys(dh_shred_key)
-        encrypted_message = ecpt.aes_encrypt(aes_key, plain_message)
-        message_hmac = ecpt.generate_hmac(hmac_key, plain_message)
 
-        # 构建请求数据
-        data_to_send = {
-            'sender_user_id': sender_user_id,
-            'receiver_user_id': receiver_user_id,
-            'message_id': message_id,
-            'encrypted_message': encrypted_message,
-            'message_hmac': message_hmac
-        }
+    def decryption(self, message):
+        plaintext_message_list = []
 
-        # 将加密消息发送到本地服务器
-        response = requests.post(f"http://127.0.0.1:{self.port}/send_message", json=data_to_send)
+        for message_id in message:
+            # message is a dictionary
+            message_content = message[message_id]
+
+            sender_public_key = self.get_public_key(message_content['sender_user_id'])
+            dh_shared_key = key.generate_dh_shared_key(self.receiver_private_key, sender_public_key)
+            aes_key, hmac_key = key.derive_dh_aes_hmac_keys(dh_shared_key)
+
+            # 解密消息内容
+            plaintext_message = ecpt.aes_decrypt(aes_key, message_content['encrypted_message'])
+
+                # 验证HMAC
+            if ecpt.verify_hmac(hmac_key, plaintext_message, message_content['message_hmac']):
+                print("Message integrity verified: ", plaintext_message)
+                plaintext_message_list.append(plaintext_message)
+            else:
+                print("Message integrity check failed!")
+
+        return plaintext_message_list
+
+    def receive(self):
+        # 从服务器获取加密的消息
+        response = requests.get(f"http://127.0.0.1:{self.port}/get_message/{self.receiver_user_id}")
+        message_data = response.json()
+        return self.decryption(message_data)

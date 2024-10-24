@@ -1,3 +1,10 @@
+# local_receive.py
+import requests
+import Encryption.key as key
+import Encryption.ecpt as ecpt
+import base64
+
+
 class Sender:
     def __init__(self, sender_user_id, port):
         self.sender_private_key, self.sender_public_key = key.generate_dh_keys()

@@ -49,6 +49,10 @@ def get_message(receiver_user_id):
         return jsonify(message)
     else:
         return jsonify({'error': 'Message not found'}), 404
+    
+@app.route('/get_msg_id', methods=['GET'])
+def get_msg_id():
+    return jsonify({'message_id': len(stored_messages) + 1})
 
 
 if __name__ == '__main__':

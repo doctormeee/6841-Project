@@ -13,9 +13,10 @@ class Sender:
         self.register()
 
     def register(self):
+        sender_public_key_bytes = key.public_key_convert_to_bytes(self.sender_public_key)
         data_to_register = {
-            'sender_user_id': self.sender_user_id,
-            'public_key': base64.b64encode(self.sender_private_key).decode()
+            'user_id': self.sender_user_id,
+            'public_key': base64.b64encode(sender_public_key_bytes).decode()
         }
         # 将加密消息发送到本地服务器
         response = requests.post(f"http://127.0.0.1:{self.port}/register", json=data_to_register)
@@ -26,11 +27,11 @@ class Sender:
         return base64.b64decode(response.json()['public_key'])
     
     def get_msg_id(self):
-        response = requests.post(f"http://127.0.0.1:{self.port}/get_msg_id")
+        response = requests.get(f"http://127.0.0.1:{self.port}/get_msg_id")
         return response.json()['message_id']
 
-    def send(self,sender_user_id, receiver_user_id, message_id, plain_message):
-        receiver_public_key = self.get_public_key(receiver_user_id)
+    def send(self, receiver_user_id, plain_message):
+        receiver_public_key = base64.b64decode(self.get_public_key(receiver_user_id))
         message_id = self.get_msg_id()
         dh_shred_key = key.generate_dh_shared_key(self.sender_private_key, receiver_public_key)
         aes_key, hmac_key = key.derive_dh_aes_hmac_keys(dh_shred_key)
@@ -39,7 +40,7 @@ class Sender:
 
         # 构建请求数据
         data_to_send = {
-            'sender_user_id': sender_user_id,
+            'sender_user_id': self.sender_user_id,
             'receiver_user_id': receiver_user_id,
             'message_id': message_id,
             'encrypted_message': encrypted_message,

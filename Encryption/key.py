@@ -13,6 +13,7 @@ from Crypto.Random import get_random_bytes
 from cryptography.hazmat.primitives.asymmetric import dh
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
 
 # 生成 RSA 密钥对
 def generate_rsa_keys():
@@ -58,7 +59,8 @@ def generate_dh_keys():
 
  # 生成 DH 共享密钥
 def generate_dh_shared_key(private_key, public_key):
-    shared_key = private_key.exchange(public_key)
+    pem_public_key = serialization.load_pem_public_key(public_key, backend=default_backend())
+    shared_key = private_key.exchange(pem_public_key)
     return shared_key
 
 def derive_dh_aes_hmac_keys(shared_key):
@@ -72,6 +74,12 @@ def derive_dh_aes_hmac_keys(shared_key):
     hmac_key = derived_key[32:64]
 
     return aes_key, hmac_key
+
+def public_key_convert_to_bytes(public_key):
+    return public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
 
 
 

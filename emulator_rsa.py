@@ -1,6 +1,6 @@
 import receiver_rsa
 import sender_rsa
-import server_rsa
+import server
 
 import threading
 
@@ -9,7 +9,7 @@ if __name__ == "__main__":
 
     # Function to run Flask app in a separate thread
     def run_server():
-        server_rsa.app.run(host='127.0.0.1', port=port)
+        server.app.run(host='127.0.0.1', port=port)
 
     # Start the Flask server in a separate thread
     server_thread = threading.Thread(target=run_server)

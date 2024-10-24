@@ -14,6 +14,7 @@ class Receiver:
     def register(self):
         # 获取公钥并将其转换为字节
         receiver_public_key_bytes = key.public_key_convert_to_bytes(self.receiver_public_key)
+
         data_to_register = {
             'user_id': self.receiver_user_id,
             'public_key': base64.b64encode(receiver_public_key_bytes).decode()
@@ -34,7 +35,7 @@ class Receiver:
             # message is a dictionary
             message_content = message[message_id]
 
-            sender_public_key = base64.b64decode(self.get_public_key(message_content['sender_user_id']))
+            sender_public_key = self.get_public_key(message_content['sender_user_id'])
             dh_shared_key = key.generate_dh_shared_key(self.receiver_private_key, sender_public_key)
             aes_key, hmac_key = key.derive_dh_aes_hmac_keys(dh_shared_key)
 

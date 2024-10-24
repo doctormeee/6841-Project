@@ -15,6 +15,8 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 
+from cryptography.hazmat.primitives.asymmetric.dh import DHPublicKey
+
 # 生成 RSA 密钥对
 def generate_rsa_keys():
     # key 是一个 RSA 对象，包含公私钥对。
@@ -50,28 +52,37 @@ def derive_keys(shared_secret):
     return aes_key, hmac_key
 
 
+
+# 硬编码的 RFC 3526 2048 位 DH 参数
+p = int("FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E08"
+        "8A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B"
+        "302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9"
+        "A637ED6B0BFF5CB6F406B7ED", 16)
+g = 2
+
+
  # 生成 DH 密钥对
 def generate_dh_keys():
-    parameters = dh.generate_parameters(generator=2, key_size=2048, backend=default_backend())
+    parameters = dh.DHParameterNumbers(p, g).parameters()
     private_key = parameters.generate_private_key()
     public_key = private_key.public_key()
     return private_key, public_key
 
  # 生成 DH 共享密钥
 def generate_dh_shared_key(private_key, public_key):
-    pem_public_key = serialization.load_pem_public_key(public_key, backend=default_backend())
+    pem_public_key = serialization.load_pem_public_key(public_key)
+
+    if not isinstance(pem_public_key, DHPublicKey):
+        raise ValueError("Public key is not a valid DH public key")
+
     shared_key = private_key.exchange(pem_public_key)
     return shared_key
 
 def derive_dh_aes_hmac_keys(shared_key):
-    hkdf = HKDF(
-        algorithm=hashes.SHA256(),  # 使用 SHA256 哈希函数
-        length=64,  # 生成 32 字节的密钥（32 字节 AES + 32 字节 HMAC）
-        backend=default_backend()
-    )
-    derived_key = hkdf.derive(shared_key)
-    aes_key = derived_key[0:32]
-    hmac_key = derived_key[32:64]
+    fixed_salt = b'fixed_salt_value'
+    derived_keys = HKDF(master=shared_key, key_len=64, salt=fixed_salt, hashmod=SHA256)
+    aes_key = derived_keys[0:32]
+    hmac_key = derived_keys[32:64]
 
     return aes_key, hmac_key
 

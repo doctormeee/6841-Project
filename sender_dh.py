@@ -23,7 +23,7 @@ class Sender:
 
     def get_public_key(self, receiver_user_id):
         response = requests.get(f"http://127.0.0.1:{self.port}/get_public_key/{receiver_user_id}")
-        
+    
         return base64.b64decode(response.json()['public_key'])
     
     def get_msg_id(self):
@@ -31,9 +31,10 @@ class Sender:
         return response.json()['message_id']
 
     def send(self, receiver_user_id, plain_message):
-        receiver_public_key = base64.b64decode(self.get_public_key(receiver_user_id))
+
         message_id = self.get_msg_id()
-        dh_shred_key = key.generate_dh_shared_key(self.sender_private_key, receiver_public_key)
+        receiver_public_key_pem = self.get_public_key(receiver_user_id)
+        dh_shred_key = key.generate_dh_shared_key(self.sender_private_key, receiver_public_key_pem)
         aes_key, hmac_key = key.derive_dh_aes_hmac_keys(dh_shred_key)
         encrypted_message = ecpt.aes_encrypt(aes_key, plain_message)
         message_hmac = ecpt.generate_hmac(hmac_key, plain_message)

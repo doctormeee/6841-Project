@@ -1,5 +1,6 @@
 # local_receive.py
 import requests
+import env
 import Encryption.key as key
 import Encryption.ecpt as ecpt
 import base64

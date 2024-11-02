@@ -8,10 +8,9 @@ import base64
 
 class Sender:
     def __init__(self, sender_user_id, port):
-        self.sender_private_key, self.sender_public_key = key.generate_dh_keys()
+        # self.sender_private_key, self.sender_public_key = key.generate_dh_keys()
         self.port = port
         self.sender_user_id = sender_user_id
-        self.register()
 
     def register(self):
         sender_public_key_bytes = key.public_key_convert_to_bytes(self.sender_public_key)
@@ -30,9 +29,17 @@ class Sender:
     def get_msg_id(self):
         response = requests.get(f"http://127.0.0.1:{self.port}/get_msg_id")
         return response.json()['message_id']
+    
+    def pg_gen(self, receiver_user_id):
+        request = {'sender_user_id' : self.sender_user_id, 'receiver_user_id' : receiver_user_id}
+        response = requests.get(f"http://127.0.0.1:{self.port}/pg_gen", json=request)
 
     def send(self, receiver_user_id, plain_message):
 
+        dh_pair = self.pg_gen(receiver_user_id)
+        p, g = dh_pair['p'], dh_pair['g']
+        self.sender_private_key, self.sender_public_key = key.generate_dh_keys(p, g)
+        self.register()
         message_id = self.get_msg_id()
         receiver_public_key_pem = self.get_public_key(receiver_user_id)
         dh_shred_key = key.generate_dh_shared_key(self.sender_private_key, receiver_public_key_pem)

@@ -27,10 +27,6 @@ class Receiver:
         response = requests.get(f"http://127.0.0.1:{self.port}/get_public_key/{user_id}")
         
         return base64.b64decode(response.json()['public_key'])
-    
-    def pg_gen(self, receiver_user_id):
-        response = requests.get(f"http://127.0.0.1:{self.port}/pg_gen/{receiver_user_id}")
-
 
 
     def decryption(self, message):

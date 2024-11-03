@@ -17,8 +17,6 @@ from cryptography.hazmat.primitives import serialization
 
 from cryptography.hazmat.primitives.asymmetric.dh import DHPublicKey
 
-import random
-
 # 生成 RSA 密钥对
 def generate_rsa_keys():
     # key 是一个 RSA 对象，包含公私钥对。
@@ -55,47 +53,11 @@ def derive_keys(shared_secret):
 
 
 
-def generate_2048_bit_prime():
-    # else, generate a 2048-bit prime number
-    while True:
-        # Generate a random 2048-bit integer
-        candidate = random.getrandbits(2048)
-        # Set the most and least significant bits to 1 to ensure it is 2048 bits and odd
-        candidate |= (1 << 2047) | 1
-        # Check if it's prime
-        if is_prime(candidate):
-            return candidate
-
-# Miller-Rabin primality test (simplified for demonstration)
-def is_prime(n, k=5):  # k is the number of tests
-    if n <= 1:
-        return False
-    if n <= 3:
-        return True
-    if n % 2 == 0:
-        return False
-    # Write n as d*2^r + 1
-    r, d = 0, n - 1
-    while d % 2 == 0:
-        d //= 2
-        r += 1
-    # Witness loop
-    for _ in range(k):
-        a = random.randint(2, n - 2)
-        x = pow(a, d, n)
-        if x == 1 or x == n - 1:
-            continue
-        for _ in range(r - 1):
-            x = pow(x, 2, n)
-            if x == n - 1:
-                break
-        else:
-            return False
-    return True
-
-
 # 硬编码的 RFC 3526 2048 位 DH 参数
-p = generate_2048_bit_prime()
+p = int("FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E08"
+        "8A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B"
+        "302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9"
+        "A637ED6B0BFF5CB6F406B7ED", 16)
 g = 2
 
 

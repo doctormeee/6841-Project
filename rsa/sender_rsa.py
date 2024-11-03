@@ -16,7 +16,7 @@ class Sender:
 
     def shared_key_gen(self):
         # 生成共享密钥
-        shared_secret = base64.b64encode(b'shared_secret_between_both_parties').decode()
+        shared_secret = base64.b64encode(b'secret.....').decode()
         aes_key, hmac_key = key.derive_keys(shared_secret.encode())
         return aes_key, hmac_key
 

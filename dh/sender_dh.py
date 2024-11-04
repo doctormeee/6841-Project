@@ -19,7 +19,6 @@ class Sender:
             'user_id': self.sender_user_id,
             'public_key': base64.b64encode(sender_public_key_bytes).decode()
         }
-        # 将加密消息发送到本地服务器
         response = requests.post(f"http://127.0.0.1:{self.port}/register", json=data_to_register)
 
     def get_public_key(self, receiver_user_id):
@@ -40,7 +39,6 @@ class Sender:
         encrypted_message = ecpt.aes_encrypt(aes_key, plain_message)
         message_hmac = ecpt.generate_hmac(hmac_key, plain_message)
 
-        # 构建请求数据
         data_to_send = {
             'sender_user_id': self.sender_user_id,
             'receiver_user_id': receiver_user_id,
@@ -49,5 +47,4 @@ class Sender:
             'message_hmac': message_hmac
         }
 
-        # 将加密消息发送到本地服务器
         response = requests.post(f"http://127.0.0.1:{self.port}/send_message", json=data_to_send)

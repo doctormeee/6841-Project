@@ -3,25 +3,20 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# 临时存储加密的消息
 stored_messages = {}
 stored_public_keys = {}
 
-# 假设这是用户的注册流程
 @app.route('/get_public_key/<user_id>', methods=['GET'])
 def get_public_key(user_id):
     return jsonify({'public_key': stored_public_keys.get(user_id)})
 
-# 假设这是用户的注册流程
 @app.route('/register', methods=['POST'])
 def register():
     user_id = request.json.get('user_id')
-    public_key = request.json.get('public_key')  # 客户端上传的公钥
-    # 存储公钥到数据库
+    public_key = request.json.get('public_key')  
     stored_public_keys[user_id] = public_key
     return jsonify({'status': 'public key registered successfully'})
 
-# 接收并存储加密消息
 @app.route('/send_message', methods=['POST'])
 def send_message():
     data = request.get_json()
@@ -38,7 +33,6 @@ def send_message():
     print(stored_messages)
     return jsonify({'status': 'success', 'message_id': message_id})
 
-# 接收端获取加密消息
 @app.route('/get_message/<receiver_user_id>', methods=['GET'])
 def get_message(receiver_user_id):
     message = {}

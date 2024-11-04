@@ -30,12 +30,12 @@ if __name__ == "__main__":
     print("Sender registration started!")
 
 
-    plaintext_message = "Just for testing....."
+    plaintext_message = "Just for testing..... RSA"
 
     # Send the encrypted message
     sender.send(receiver_user_id, plaintext_message)
     print("Message 1 sent successfully!")
-    plaintext_message = "HHHHHHHH"
+    plaintext_message = "XXXXXXXXXX"
     sender.send(receiver_user_id, plaintext_message)
     print("Message 2 sent successfully!")
 

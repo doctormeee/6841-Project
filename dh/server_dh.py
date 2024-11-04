@@ -2,7 +2,7 @@
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
-
+app.config['ENV'] = 'development'
 # 临时存储加密的消息
 stored_messages = {}
 stored_public_keys = {}
@@ -33,6 +33,7 @@ def send_message():
         'encrypted_message': data['encrypted_message'],
         'message_hmac': data['message_hmac']
     }
+    print(stored_messages)
     return jsonify({'status': 'success', 'message_id': message_id})
 
 # 接收端获取加密消息

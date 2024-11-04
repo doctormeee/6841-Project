@@ -28,7 +28,7 @@ if __name__ == "__main__":
     print("Sender registration started!")
 
 
-    plaintext_message = "Just for testing....."
+    plaintext_message = "Just for testing..... diffie hellman"
 
     # Send the encrypted message
     sender.send(receiver_user_id, plaintext_message)
